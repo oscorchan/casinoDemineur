@@ -103,14 +103,16 @@ class Jeu:
         self.caseTrouvees = 0
         
         self.perdu = False
-        self.boutonRecommencer = None
+        self.boutonRecommencer = Bouton((TAILLE_FENETRE) // 2, TAILLE_FENETRE // 2 + 100, 200, 50, "Recommencer", BLANC, ROUGE, VERT)
         self.boutonEncaisser = Bouton(TAILLE_FENETRE+25, TAILLE_FENETRE-100, 150, 50, "Encaisser", BLANC, ROUGE, VERT)
         
         self.casesRevelees = []
+        self.calculerProchainMultiplicateur()
         self.afficherProchainMultiplicateur()        
 
     def reveler(self, screen, x, y):
         if (x, y) in self.casesRevelees:
+            self.afficherProchainMultiplicateur()
             return False
         else:
             self.casesRevelees.append((x, y))
@@ -126,6 +128,7 @@ class Jeu:
             return True
         pygame.draw.rect(screen, couleur, (x * TAILLE_CASE, y * TAILLE_CASE, TAILLE_CASE, TAILLE_CASE))
         pygame.draw.rect(screen, NOIR, (x * TAILLE_CASE, y * TAILLE_CASE, TAILLE_CASE, TAILLE_CASE), 1)
+        self.calculerProchainMultiplicateur()
         self.afficherProchainMultiplicateur()
         return False
 
@@ -142,13 +145,14 @@ class Jeu:
         self.screen.blit(miseText, miseRect)
 
     def afficherProchainMultiplicateur(self):
-        self.multiplicateur = round(self.multiplicateur * ((self.M - self.caseTrouvees) / self.grille.casesRestantes), 2)
-        self.caseTrouvees += 1
-        #self.multiplicateur = round(self.multiplicateur * 1.25, 2)
         multiplicateurText = self.font.render(f"Next : x{self.multiplicateur}", True, BLANC)
         multiplicateurRect = multiplicateurText.get_rect()
         multiplicateurRect.topright = (TAILLE_FENETRE + 150, 120)
         self.screen.blit(multiplicateurText, multiplicateurRect)
+
+    def calculerProchainMultiplicateur(self):
+        self.multiplicateur = round(self.multiplicateur * ((self.M - self.caseTrouvees) / self.grille.casesRestantes), 2)
+        self.caseTrouvees += 1
 
 
     def initialiserGrille(self):
@@ -157,18 +161,12 @@ class Jeu:
         pygame.display.flip()
 
     def perdre(self):
-        pygame.time.delay(1000)
+        pygame.time.delay(250)
         self.screen.fill(NOIR)
         perdreText = self.font.render("Vous avez perdu !", True, BLANC)
         perdreRect = perdreText.get_rect()
         perdreRect.center = ((TAILLE_FENETRE + 200)//2, TAILLE_FENETRE//2)
         self.screen.blit(perdreText, perdreRect)
-
-        recommencerText = self.font.render("Recommencer", True, BLANC)
-        recommencerRect = recommencerText.get_rect()
-        recommencerRect.center = ((TAILLE_FENETRE + 200) // 2, TAILLE_FENETRE // 2 + 100)
-        self.boutonRecommencer = Bouton(recommencerRect.left, recommencerRect.top, recommencerRect.width, recommencerRect.height, "Recommencer", BLANC, VERT, ROUGE)
-        self.boutonRecommencer.dessiner(self.screen)
 
         self.multiplicateur = 1
         self.caseTrouvees = 0
@@ -200,11 +198,16 @@ class Jeu:
                         self.player = Player()
                         self.multiplicateur = 1
                         self.grille.dessiner(self.screen)
+                        self.calculerProchainMultiplicateur()
                         self.afficherProchainMultiplicateur()
                         self.perdu = False
 
-            if not self.perdu:
+            if self.perdu:
+                self.boutonRecommencer.dessiner(self.screen)
+            else:
                 self.boutonEncaisser.dessiner(self.screen)
+                self.afficherProchainMultiplicateur()
+            
 
             self.afficherArgent()
             self.afficherMise()
