@@ -12,6 +12,7 @@ BLANC = (255, 255, 255)
 NOIR = (0, 0, 0)
 VERT = (0, 255, 0)
 ROUGE = (255, 0, 0)
+VERT_CLAIR = (144, 238, 144)
 
 class Grille :
     def __init__(self, M, K) -> None:
@@ -40,19 +41,52 @@ class Grille :
                 pygame.draw.rect(screen, couleur, (x * TAILLE_CASE, y * TAILLE_CASE, TAILLE_CASE, TAILLE_CASE))
                 pygame.draw.rect(screen, NOIR, (x * TAILLE_CASE, y * TAILLE_CASE, TAILLE_CASE, TAILLE_CASE), 1)
 
-    def reveler(self, screen, x, y):
-        if self.grille[x][y] == 0:
-            couleur = VERT
-            self.casesRestantes -= 1
-        else:
-            couleur = ROUGE
-        pygame.draw.rect(screen, couleur, (x * TAILLE_CASE, y * TAILLE_CASE, TAILLE_CASE, TAILLE_CASE))
-        pygame.draw.rect(screen, NOIR, (x * TAILLE_CASE, y * TAILLE_CASE, TAILLE_CASE, TAILLE_CASE), 1)
 
 class Player:
     def __init__(self) -> None:
         self.tune = 500
         self.mise = 50
+
+class Bouton:
+    def __init__(self, x, y, l, h, text, textCouleur, couleur, couleurSubbriance) -> None:
+        self.x = x
+        self.y = y
+        self.l = l
+        self.h = h
+        self.text = text
+        self.textCouleur = textCouleur
+        self.couleur = couleur
+        self.couleurSubbriance = couleurSubbriance
+
+    def dessiner(self, screen):
+        positionSouris = pygame.mouse.get_pos()
+
+        if self.x < positionSouris[0] < self.x + self.l and self.y < positionSouris[1] < self.y + self.h:
+            pygame.draw.rect(screen, self.couleurSubbriance, (self.x, self.y, self.l, self.h))
+        else :
+            pygame.draw.rect(screen, self.couleur, (self.x, self.y, self.l, self.h))
+
+        font = pygame.font.SysFont(None, 36)
+        textSurface = font.render(self.text, 1, self.textCouleur)
+        textRectangle = textSurface.get_rect(center = (self.x + self.l / 2, self.y + self.h / 2))
+        screen.blit(textSurface, textRectangle)
+
+    def dessinerPetit(self, screen):
+        positionSouris = pygame.mouse.get_pos()
+
+        if self.x < positionSouris[0] < self.x + self.l and self.y < positionSouris[1] < self.y + self.h:
+            pygame.draw.rect(screen, self.couleurSubbriance, (self.x, self.y, self.l, self.h))
+        else :
+            pygame.draw.rect(screen, self.couleur, (self.x, self.y, self.l, self.h))
+
+        font = pygame.font.SysFont(None, 36)
+        textSurface = font.render(self.text, 1, self.textCouleur)
+        textRectangle = textSurface.get_rect(center = (self.x + self.l / 2, self.y + self.h / 2))
+        screen.blit(textSurface, textRectangle)
+
+    def estClique(self, positionSouris):
+        return self.x < positionSouris[0] < self.x + self.l and self.y < positionSouris[1] < self.y + self.h
+    
 
 class Jeu:
     def __init__(self) -> None:
@@ -65,6 +99,35 @@ class Jeu:
         self.font = pygame.font.Font(None, 36)
         self.initialiserGrille()
         self.multiplicateur = 1
+        self.M = TAILLE_GRILLE * TAILLE_GRILLE
+        self.caseTrouvees = 0
+        
+        self.perdu = False
+        self.boutonRecommencer = None
+        self.boutonEncaisser = Bouton(TAILLE_FENETRE+25, TAILLE_FENETRE-100, 150, 50, "Encaisser", BLANC, ROUGE, VERT)
+        
+        self.casesRevelees = []
+        self.afficherProchainMultiplicateur()        
+
+    def reveler(self, screen, x, y):
+        if (x, y) in self.casesRevelees:
+            return False
+        else:
+            self.casesRevelees.append((x, y))
+
+        if self.grille.grille[x][y] == 0:
+            couleur = VERT
+            self.grille.casesRestantes -= 1
+        else:
+            couleur = ROUGE
+            pygame.draw.rect(screen, couleur, (x * TAILLE_CASE, y * TAILLE_CASE, TAILLE_CASE, TAILLE_CASE))
+            pygame.draw.rect(screen, NOIR, (x * TAILLE_CASE, y * TAILLE_CASE, TAILLE_CASE, TAILLE_CASE), 1)
+            pygame.display.update()
+            return True
+        pygame.draw.rect(screen, couleur, (x * TAILLE_CASE, y * TAILLE_CASE, TAILLE_CASE, TAILLE_CASE))
+        pygame.draw.rect(screen, NOIR, (x * TAILLE_CASE, y * TAILLE_CASE, TAILLE_CASE, TAILLE_CASE), 1)
+        self.afficherProchainMultiplicateur()
+        return False
 
     def afficherArgent(self):
         argentText = self.font.render(f"Argent : {self.player.tune}", True, BLANC)
@@ -78,14 +141,14 @@ class Jeu:
         miseRect.topright = (TAILLE_FENETRE + 150, 70)
         self.screen.blit(miseText, miseRect)
 
-    def afficherMultiplicateur(self):
-        self.multiplicateur = round(self.multiplicateur * (self.grille.K * self.grille.K / self.grille.casesRestantes), 2)
-        multiplicateurText = self.font.render(f"x{self.multiplicateur}", True, BLANC)
+    def afficherProchainMultiplicateur(self):
+        self.multiplicateur = round(self.multiplicateur * ((self.M - self.caseTrouvees) / self.grille.casesRestantes), 2)
+        self.caseTrouvees += 1
+        #self.multiplicateur = round(self.multiplicateur * 1.25, 2)
+        multiplicateurText = self.font.render(f"Next : x{self.multiplicateur}", True, BLANC)
         multiplicateurRect = multiplicateurText.get_rect()
         multiplicateurRect.topright = (TAILLE_FENETRE + 150, 120)
         self.screen.blit(multiplicateurText, multiplicateurRect)
-        print(self.multiplicateur)
-        print(self.grille.casesRestantes)
 
 
     def initialiserGrille(self):
@@ -93,20 +156,55 @@ class Jeu:
         self.grille.dessiner(self.screen)
         pygame.display.flip()
 
+    def perdre(self):
+        pygame.time.delay(1000)
+        self.screen.fill(NOIR)
+        perdreText = self.font.render("Vous avez perdu !", True, BLANC)
+        perdreRect = perdreText.get_rect()
+        perdreRect.center = ((TAILLE_FENETRE + 200)//2, TAILLE_FENETRE//2)
+        self.screen.blit(perdreText, perdreRect)
+
+        recommencerText = self.font.render("Recommencer", True, BLANC)
+        recommencerRect = recommencerText.get_rect()
+        recommencerRect.center = ((TAILLE_FENETRE + 200) // 2, TAILLE_FENETRE // 2 + 100)
+        self.boutonRecommencer = Bouton(recommencerRect.left, recommencerRect.top, recommencerRect.width, recommencerRect.height, "Recommencer", BLANC, VERT, ROUGE)
+        self.boutonRecommencer.dessiner(self.screen)
+
+        self.multiplicateur = 1
+        self.caseTrouvees = 0
+        self.grille.casesRestantes = self.M
+        self.casesRevelees = []
+    
+        self.perdu = True
+
+        pygame.display.flip()
+        
     def executer(self):
         while self.running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    x = event.pos[0] // TAILLE_CASE
-                    y = event.pos[1] // TAILLE_CASE
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if self.perdu == False:
+                        x = event.pos[0] // TAILLE_CASE
+                        y = event.pos[1] // TAILLE_CASE
 
-                    if event.pos[0] <= TAILLE_FENETRE:
-                        pygame.draw.rect(self.screen, NOIR, (TAILLE_FENETRE, 0, 200, TAILLE_FENETRE))
-                        self.afficherMultiplicateur()
-                        self.grille.reveler(self.screen, x, y)
-                        pygame.display.flip()
+                        if event.pos[0] <= TAILLE_FENETRE:
+                            pygame.draw.rect(self.screen, NOIR, (TAILLE_FENETRE, 0, 200, TAILLE_FENETRE))
+                            if self.reveler(self.screen, x, y):
+                                self.perdre()
+                            pygame.display.flip()
+                    elif self.boutonRecommencer and self.boutonRecommencer.estClique(event.pos):
+                        self.screen.fill(NOIR)
+                        self.grille = Grille(TAILLE_GRILLE, K)
+                        self.player = Player()
+                        self.multiplicateur = 1
+                        self.grille.dessiner(self.screen)
+                        self.afficherProchainMultiplicateur()
+                        self.perdu = False
+
+            if not self.perdu:
+                self.boutonEncaisser.dessiner(self.screen)
 
             self.afficherArgent()
             self.afficherMise()
@@ -114,6 +212,3 @@ class Jeu:
 
 jeu = Jeu()
 jeu.executer()
-
-
-
