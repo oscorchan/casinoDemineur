@@ -107,6 +107,11 @@ class Jeu:
         self.boutonRecommencer = Bouton((TAILLE_FENETRE) // 2, TAILLE_FENETRE // 2 + 100, 200, 50, "Recommencer", BLANC, ROUGE, VERT)
         self.boutonEncaisser = Bouton(TAILLE_FENETRE+25, TAILLE_FENETRE-100, 150, 50, "Encaisser", BLANC, ROUGE, VERT)
         
+        self.boutonAugmenterMise = Bouton(TAILLE_FENETRE + 60, 120, 25, 25, "+", BLANC, ROUGE, VERT)
+        self.boutonDiminuerMise = Bouton(TAILLE_FENETRE + 110, 120, 25, 25, "-", BLANC, ROUGE, VERT)
+        self.boutonDoublerMise = Bouton(TAILLE_FENETRE + 60, 170, 25, 25, "x", BLANC, ROUGE, VERT)
+        self.boutonDiviserMise = Bouton(TAILLE_FENETRE + 110, 170, 25, 25, "/", BLANC, ROUGE, VERT)
+        
         self.gain = self.player.mise
         
         self.casesRevelees = []
@@ -222,31 +227,54 @@ class Jeu:
                             if self.reveler(self.screen, x, y):
                                 self.perdre()
                             pygame.display.flip()
-                    elif self.boutonRecommencer and self.boutonRecommencer.estClique(event.pos):
-                        self.screen.fill(NOIR)
-                        self.grille = Grille(TAILLE_GRILLE, K)
-                        self.multiplicateur = 1
-                        self.grille.dessiner(self.screen)
-                        self.calculerProchainMultiplicateur()
-                        self.afficherGain()
-                        self.afficherProchainMultiplicateur()
-                        self.perdu = False
-                        self.aEncaisser = False
+                    else :
+                        if self.boutonRecommencer.estClique(event.pos):
+                            self.screen.fill(NOIR)
+                            self.grille = Grille(TAILLE_GRILLE, K)
+                            self.multiplicateur = 1
+                            self.grille.dessiner(self.screen)
+                            self.calculerProchainMultiplicateur()
+                            self.afficherGain()
+                            self.afficherProchainMultiplicateur()
+                            self.perdu = False
+                            self.aEncaisser = False
+                        elif self.boutonAugmenterMise.estClique(event.pos):
+                            if self.player.tune >= self.player.mise + 10:
+                                self.player.mise += 10
+                            else:
+                                self.player.mise = self.player.tune
+                        elif self.boutonDiminuerMise.estClique(event.pos):
+                            if self.player.mise >= 10:
+                                self.player.mise -= 10
+                            else:
+                                self.player.mise = 0
+                        elif self.boutonDiviserMise.estClique(event.pos):
+                            self.player.mise = round(self.player.mise/2)
+                            if self.player.mise < 10:
+                                if self.player.tune < 10:
+                                    self.player.mise = self.player.tune
+                                else:
+                                    self.player.mise = 10
+                        elif self.boutonDoublerMise.estClique(event.pos):
+                            if self.player.tune >= self.player.mise*2:
+                                self.player.mise *= 2
+                            else:
+                                self.player.mise = self.player.tune
                         
                     if self.boutonEncaisser.estClique(event.pos):
                         self.encaisser()
 
-            if self.perdu:
+            if self.perdu or self.aEncaisser:
+                self.screen.fill(NOIR)
                 self.boutonRecommencer.dessiner(self.screen)
-                
-            
-            if not self.perdu and not self.aEncaisser:
+                self.boutonAugmenterMise.dessiner(self.screen)
+                self.boutonDiminuerMise.dessiner(self.screen)
+                self.boutonDoublerMise.dessiner(self.screen)
+                self.boutonDiviserMise.dessiner(self.screen)
+            else:
                 self.boutonEncaisser.dessiner(self.screen)
                 self.afficherProchainMultiplicateur()
                 self.afficherGain()
-                
-            if self.aEncaisser:
-                self.boutonRecommencer.dessiner(self.screen)
             
 
             self.afficherArgent()
