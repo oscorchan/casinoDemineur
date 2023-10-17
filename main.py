@@ -4,8 +4,6 @@ from random import randint
 TAILLE_GRILLE = 5
 TAILLE_FENETRE = 600
 
-K = 5
-
 TAILLE_CASE = TAILLE_FENETRE // TAILLE_GRILLE
 
 BLANC = (255, 255, 255)
@@ -90,10 +88,11 @@ class Bouton:
 
 class Jeu:
     def __init__(self) -> None:
+        self.K = 5
         pygame.init()
         self.screen = pygame.display.set_mode((TAILLE_FENETRE + 200, TAILLE_FENETRE))
         pygame.display.set_caption("Démineur")
-        self.grille = Grille(TAILLE_GRILLE, K)
+        self.grille = Grille(TAILLE_GRILLE, self.K)
         self.player = Player()
         self.running = True
         self.font = pygame.font.Font(None, 36)
@@ -104,13 +103,17 @@ class Jeu:
         
         self.perdu = False
         self.aEncaisser = False
-        self.boutonRecommencer = Bouton((TAILLE_FENETRE) // 2, TAILLE_FENETRE // 2 + 100, 200, 50, "Recommencer", BLANC, ROUGE, VERT)
+        self.aCommencer = False
+        self.boutonJouer = Bouton((TAILLE_FENETRE) // 2, TAILLE_FENETRE // 2 + 100, 150, 50, "Jouer", BLANC, ROUGE, VERT)
         self.boutonEncaisser = Bouton(TAILLE_FENETRE+25, TAILLE_FENETRE-100, 150, 50, "Encaisser", BLANC, ROUGE, VERT)
         
         self.boutonAugmenterMise = Bouton(TAILLE_FENETRE + 60, 120, 25, 25, "+", BLANC, ROUGE, VERT)
         self.boutonDiminuerMise = Bouton(TAILLE_FENETRE + 110, 120, 25, 25, "-", BLANC, ROUGE, VERT)
         self.boutonDoublerMise = Bouton(TAILLE_FENETRE + 60, 170, 25, 25, "x", BLANC, ROUGE, VERT)
         self.boutonDiviserMise = Bouton(TAILLE_FENETRE + 110, 170, 25, 25, "/", BLANC, ROUGE, VERT)
+        
+        self.boutonAugmenterNombreDeMines = Bouton(35, 70, 25, 25, "+", BLANC, ROUGE, VERT)
+        self.boutonDiminuerNombreDeMines = Bouton(85, 70, 25, 25, "-", BLANC, ROUGE, VERT)
         
         self.gain = self.player.mise
         
@@ -139,51 +142,54 @@ class Jeu:
         self.calculerProchainMultiplicateur()
         self.afficherProchainMultiplicateur()
         return False
-
+    
     def afficherArgent(self):
         argentText = self.font.render(f"{self.player.tune}", True, BLANC)
         argentRect = argentText.get_rect()
         argentRect.topright = (TAILLE_FENETRE + 150, 20)
         self.screen.blit(argentText, argentRect)
-
+    
     def afficherMise(self):
         miseText = self.font.render(f"Mise : {self.player.mise}", True, BLANC)
         miseRect = miseText.get_rect()
         miseRect.topright = (TAILLE_FENETRE + 150, 70)
-        self.screen.blit(miseText, miseRect)
-
+        self.screen.blit(miseText, miseRect)       
+    
+    def afficherNombreDeMines(self):
+        nombreDeMinesText = self.font.render(f"Mines : {self.K}", True, BLANC)
+        nombreDeMinesRect = nombreDeMinesText.get_rect()
+        nombreDeMinesRect.topright = (120, 20)
+        self.screen.blit(nombreDeMinesText, nombreDeMinesRect)
+    
     def afficherProchainMultiplicateur(self):
         multiplicateurText = self.font.render(f"Next : x{self.multiplicateur}", True, BLANC)
         multiplicateurRect = multiplicateurText.get_rect()
         multiplicateurRect.topright = (TAILLE_FENETRE + 150, 120)
-        self.screen.blit(multiplicateurText, multiplicateurRect)
-        
+        self.screen.blit(multiplicateurText, multiplicateurRect)       
+    
     def afficherGain(self):
         gainText = self.font.render(f"{self.gain}", True, BLANC)
         gainRect = gainText.get_rect()
         gainRect.center = (TAILLE_FENETRE + 100, TAILLE_FENETRE - 120)
         self.screen.blit(gainText, gainRect)
-
+    
     def calculerProchainMultiplicateur(self):
         self.gain = round((self.player.mise * self.multiplicateur) * 0.99, 2)
         self.multiplicateur = round(self.multiplicateur * ((self.M - self.caseTrouvees) / self.grille.casesRestantes), 2)
         if self.multiplicateur > 100:
             round(self.multiplicateur)
         self.caseTrouvees += 1
-
-
+    
     def initialiserGrille(self):
         self.screen.fill(NOIR)
         self.grille.dessiner(self.screen)
         pygame.display.flip()
-
+    
     def perdre(self):
         pygame.time.delay(250)
-        self.screen.fill(NOIR)
-        perdreText = self.font.render("Vous avez perdu !", True, BLANC)
-        perdreRect = perdreText.get_rect()
-        perdreRect.center = ((TAILLE_FENETRE + 200)//2, TAILLE_FENETRE//2)
-        self.screen.blit(perdreText, perdreRect)
+        
+        if self.player.mise > self.player.tune:
+            self.player.mise = self.player.tune
 
         self.multiplicateur = 1
         self.caseTrouvees = 0
@@ -192,15 +198,9 @@ class Jeu:
     
         self.perdu = True
 
-        pygame.display.flip()
-        
+        pygame.display.flip()     
+    
     def encaisser(self):
-        self.screen.fill(NOIR)
-        beneficeText = self.font.render(f"+{self.gain}", True, VERT)
-        beneficeRect = beneficeText.get_rect()
-        beneficeRect.center = ((TAILLE_FENETRE + 200) // 2, TAILLE_FENETRE //2)
-        self.screen.blit(beneficeText, beneficeRect)
-        
         self.player.tune = round(self.gain + self.player.tune, 2)
         
         self.multiplicateur = 1
@@ -218,7 +218,7 @@ class Jeu:
                 if event.type == pygame.QUIT:
                     self.running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if self.perdu == False and self.aEncaisser == False:
+                    if self.perdu == False and self.aEncaisser == False and self.aCommencer == True:
                         x = event.pos[0] // TAILLE_CASE
                         y = event.pos[1] // TAILLE_CASE
 
@@ -228,9 +228,11 @@ class Jeu:
                                 self.perdre()
                             pygame.display.flip()
                     else :
-                        if self.boutonRecommencer.estClique(event.pos):
+                        if self.boutonJouer.estClique(event.pos):
+                            self.aCommencer = True
+                            self.player.tune = round(self.player.tune - self.player.mise, 2)
                             self.screen.fill(NOIR)
-                            self.grille = Grille(TAILLE_GRILLE, K)
+                            self.grille = Grille(TAILLE_GRILLE, self.K)
                             self.multiplicateur = 1
                             self.grille.dessiner(self.screen)
                             self.calculerProchainMultiplicateur()
@@ -260,25 +262,45 @@ class Jeu:
                                 self.player.mise *= 2
                             else:
                                 self.player.mise = self.player.tune
+                        elif self.boutonAugmenterNombreDeMines.estClique(event.pos):
+                            if self.K < TAILLE_GRILLE*TAILLE_GRILLE - 1:
+                                self.K += 1
+                        elif self.boutonDiminuerNombreDeMines.estClique(event.pos):
+                            if self.K > 1:
+                                self.K -= 1
                         
                     if self.boutonEncaisser.estClique(event.pos):
                         self.encaisser()
 
-            if self.perdu or self.aEncaisser:
+            if self.perdu or self.aEncaisser or not self.aCommencer:
                 self.screen.fill(NOIR)
-                self.boutonRecommencer.dessiner(self.screen)
+                self.boutonJouer.dessiner(self.screen)
                 self.boutonAugmenterMise.dessiner(self.screen)
                 self.boutonDiminuerMise.dessiner(self.screen)
                 self.boutonDoublerMise.dessiner(self.screen)
                 self.boutonDiviserMise.dessiner(self.screen)
+                self.boutonAugmenterNombreDeMines.dessiner(self.screen)
+                self.boutonDiminuerNombreDeMines.dessiner(self.screen)
+                self.afficherMise()
+                self.afficherArgent()
+                self.afficherNombreDeMines()
+                if self.perdu:
+                    perdreText = self.font.render("Vous avez perdu !", True, BLANC)
+                    perdreRect = perdreText.get_rect()
+                    perdreRect.center = ((TAILLE_FENETRE + 200)//2, TAILLE_FENETRE//2)
+                    self.screen.blit(perdreText, perdreRect)
+                elif self.aEncaisser:
+                    beneficeText = self.font.render(f"+{self.gain}", True, VERT)
+                    beneficeRect = beneficeText.get_rect()
+                    beneficeRect.center = ((TAILLE_FENETRE + 200) // 2, TAILLE_FENETRE //2)
+                    self.screen.blit(beneficeText, beneficeRect)
             else:
                 self.boutonEncaisser.dessiner(self.screen)
                 self.afficherProchainMultiplicateur()
                 self.afficherGain()
-            
 
-            self.afficherArgent()
-            self.afficherMise()
+            self.afficherArgent() 
+            
             pygame.display.update()
 
 jeu = Jeu()
