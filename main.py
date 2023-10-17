@@ -103,8 +103,11 @@ class Jeu:
         self.caseTrouvees = 0
         
         self.perdu = False
+        self.aEncaisser = False
         self.boutonRecommencer = Bouton((TAILLE_FENETRE) // 2, TAILLE_FENETRE // 2 + 100, 200, 50, "Recommencer", BLANC, ROUGE, VERT)
         self.boutonEncaisser = Bouton(TAILLE_FENETRE+25, TAILLE_FENETRE-100, 150, 50, "Encaisser", BLANC, ROUGE, VERT)
+        
+        self.gain = self.player.mise
         
         self.casesRevelees = []
         self.calculerProchainMultiplicateur()
@@ -133,7 +136,7 @@ class Jeu:
         return False
 
     def afficherArgent(self):
-        argentText = self.font.render(f"Argent : {self.player.tune}", True, BLANC)
+        argentText = self.font.render(f"{self.player.tune}", True, BLANC)
         argentRect = argentText.get_rect()
         argentRect.topright = (TAILLE_FENETRE + 150, 20)
         self.screen.blit(argentText, argentRect)
@@ -149,9 +152,18 @@ class Jeu:
         multiplicateurRect = multiplicateurText.get_rect()
         multiplicateurRect.topright = (TAILLE_FENETRE + 150, 120)
         self.screen.blit(multiplicateurText, multiplicateurRect)
+        
+    def afficherGain(self):
+        gainText = self.font.render(f"{self.gain}", True, BLANC)
+        gainRect = gainText.get_rect()
+        gainRect.center = (TAILLE_FENETRE + 100, TAILLE_FENETRE - 120)
+        self.screen.blit(gainText, gainRect)
 
     def calculerProchainMultiplicateur(self):
+        self.gain = round((self.player.mise * self.multiplicateur) * 0.99, 2)
         self.multiplicateur = round(self.multiplicateur * ((self.M - self.caseTrouvees) / self.grille.casesRestantes), 2)
+        if self.multiplicateur > 100:
+            round(self.multiplicateur)
         self.caseTrouvees += 1
 
 
@@ -177,13 +189,31 @@ class Jeu:
 
         pygame.display.flip()
         
+    def encaisser(self):
+        self.screen.fill(NOIR)
+        beneficeText = self.font.render(f"+{self.gain}", True, VERT)
+        beneficeRect = beneficeText.get_rect()
+        beneficeRect.center = ((TAILLE_FENETRE + 200) // 2, TAILLE_FENETRE //2)
+        self.screen.blit(beneficeText, beneficeRect)
+        
+        self.player.tune = round(self.gain + self.player.tune, 2)
+        
+        self.multiplicateur = 1
+        self.caseTrouvees = 0
+        self.grille.casesRestantes = self.M
+        self.casesRevelees = []
+    
+        self.aEncaisser = True
+
+        pygame.display.flip()
+        
     def executer(self):
         while self.running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if self.perdu == False:
+                    if self.perdu == False and self.aEncaisser == False:
                         x = event.pos[0] // TAILLE_CASE
                         y = event.pos[1] // TAILLE_CASE
 
@@ -195,18 +225,28 @@ class Jeu:
                     elif self.boutonRecommencer and self.boutonRecommencer.estClique(event.pos):
                         self.screen.fill(NOIR)
                         self.grille = Grille(TAILLE_GRILLE, K)
-                        self.player = Player()
                         self.multiplicateur = 1
                         self.grille.dessiner(self.screen)
                         self.calculerProchainMultiplicateur()
+                        self.afficherGain()
                         self.afficherProchainMultiplicateur()
                         self.perdu = False
+                        self.aEncaisser = False
+                        
+                    if self.boutonEncaisser.estClique(event.pos):
+                        self.encaisser()
 
             if self.perdu:
                 self.boutonRecommencer.dessiner(self.screen)
-            else:
+                
+            
+            if not self.perdu and not self.aEncaisser:
                 self.boutonEncaisser.dessiner(self.screen)
                 self.afficherProchainMultiplicateur()
+                self.afficherGain()
+                
+            if self.aEncaisser:
+                self.boutonRecommencer.dessiner(self.screen)
             
 
             self.afficherArgent()
