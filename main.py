@@ -145,10 +145,10 @@ class Jeu:
         else:
             image = self.imageBombe
             self.sonExplosion.play()
-            image.blit(screen, (x * TAILLE_FENETRE, y*TAILLE_FENETRE))
+            screen.blit(image, (x * 120, y * 120))
             pygame.display.update()
             return True
-        image.blit(screen, (x * TAILLE_FENETRE, y*TAILLE_FENETRE))
+        screen.blit(image, (x * 120, y * 120))
         pygame.display.update()
         self.calculerProchainMultiplicateur()
         self.afficherProchainMultiplicateur()
