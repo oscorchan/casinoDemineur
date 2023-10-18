@@ -103,6 +103,9 @@ class Jeu:
         
         self.sonEncaisser = pygame.mixer.Sound('ressources/sounds/encaisser.wav')
         self.sonTirer = pygame.mixer.Sound('ressources/sounds/tirer.wav')
+        self.sonExplosion = pygame.mixer.Sound('ressources/sounds/explosion.wav')
+        
+        self.sonExplosion.set_volume(0.5)
         
         self.perdu = False
         self.aEncaisser = False
@@ -137,6 +140,7 @@ class Jeu:
             self.grille.casesRestantes -= 1
         else:
             couleur = ROUGE
+            self.sonExplosion.play()
             pygame.draw.rect(screen, couleur, (x * TAILLE_CASE, y * TAILLE_CASE, TAILLE_CASE, TAILLE_CASE))
             pygame.draw.rect(screen, NOIR, (x * TAILLE_CASE, y * TAILLE_CASE, TAILLE_CASE, TAILLE_CASE), 1)
             pygame.display.update()
