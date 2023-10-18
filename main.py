@@ -18,6 +18,7 @@ class Grille :
         self.K = K
         self.grille = self.genererGrille()
         self.casesRestantes = M*M-K
+        self.imageDos = pygame.image.load('ressources/images/dosCases.png')
 
     def genererGrille(self):
         grille = [[0] * self.M for _ in range(self.M)]
@@ -35,9 +36,7 @@ class Grille :
     def dessiner(self, screen):
         for y in range(len(self.grille)):
             for x in range(len(self.grille[y])):
-                couleur = BLANC
-                pygame.draw.rect(screen, couleur, (x * TAILLE_CASE, y * TAILLE_CASE, TAILLE_CASE, TAILLE_CASE))
-                pygame.draw.rect(screen, NOIR, (x * TAILLE_CASE, y * TAILLE_CASE, TAILLE_CASE, TAILLE_CASE), 1)
+                screen.blit(self.imageDos, (x*120, y*120))
 
 
 class Player:
@@ -104,8 +103,13 @@ class Jeu:
         self.sonEncaisser = pygame.mixer.Sound('ressources/sounds/encaisser.wav')
         self.sonTirer = pygame.mixer.Sound('ressources/sounds/tirer.wav')
         self.sonExplosion = pygame.mixer.Sound('ressources/sounds/explosion.wav')
+        self.sonRetourner = pygame.mixer.Sound('ressources/sounds/retourner.wav')
+        
+        self.imageBombe = pygame.image.load('ressources/images/bombe.png')
+        self.imagePiece = pygame.image.load('ressources/images/piece.png')
         
         self.sonExplosion.set_volume(0.5)
+        self.sonRetourner.set_volume(0.7)
         
         self.perdu = False
         self.aEncaisser = False
@@ -135,18 +139,17 @@ class Jeu:
             self.casesRevelees.append((x, y))
 
         if self.grille.grille[x][y] == 0:
-            self.sonTirer.play()
-            couleur = VERT
+            self.sonRetourner.play()
+            image = self.imagePiece
             self.grille.casesRestantes -= 1
         else:
-            couleur = ROUGE
+            image = self.imageBombe
             self.sonExplosion.play()
-            pygame.draw.rect(screen, couleur, (x * TAILLE_CASE, y * TAILLE_CASE, TAILLE_CASE, TAILLE_CASE))
-            pygame.draw.rect(screen, NOIR, (x * TAILLE_CASE, y * TAILLE_CASE, TAILLE_CASE, TAILLE_CASE), 1)
+            image.blit(screen, (x * TAILLE_FENETRE, y*TAILLE_FENETRE))
             pygame.display.update()
             return True
-        pygame.draw.rect(screen, couleur, (x * TAILLE_CASE, y * TAILLE_CASE, TAILLE_CASE, TAILLE_CASE))
-        pygame.draw.rect(screen, NOIR, (x * TAILLE_CASE, y * TAILLE_CASE, TAILLE_CASE, TAILLE_CASE), 1)
+        image.blit(screen, (x * TAILLE_FENETRE, y*TAILLE_FENETRE))
+        pygame.display.update()
         self.calculerProchainMultiplicateur()
         self.afficherProchainMultiplicateur()
         return False
@@ -249,16 +252,19 @@ class Jeu:
                             self.perdu = False
                             self.aEncaisser = False
                         elif self.boutonAugmenterMise.estClique(event.pos):
+                            self.sonTirer.play()
                             if self.player.tune >= self.player.mise + 10:
                                 self.player.mise += 10
                             else:
                                 self.player.mise = self.player.tune
                         elif self.boutonDiminuerMise.estClique(event.pos):
+                            self.sonTirer.play()
                             if self.player.mise >= 10:
                                 self.player.mise -= 10
                             else:
                                 self.player.mise = 0
                         elif self.boutonDiviserMise.estClique(event.pos):
+                            self.sonTirer.play()
                             self.player.mise = round(self.player.mise/2)
                             if self.player.mise < 10:
                                 if self.player.tune < 10:
@@ -266,14 +272,17 @@ class Jeu:
                                 else:
                                     self.player.mise = 10
                         elif self.boutonDoublerMise.estClique(event.pos):
+                            self.sonTirer.play()
                             if self.player.tune >= self.player.mise*2:
                                 self.player.mise *= 2
                             else:
                                 self.player.mise = self.player.tune
                         elif self.boutonAugmenterNombreDeMines.estClique(event.pos):
+                            self.sonTirer.play()
                             if self.K < TAILLE_GRILLE*TAILLE_GRILLE - 1:
                                 self.K += 1
                         elif self.boutonDiminuerNombreDeMines.estClique(event.pos):
+                            self.sonTirer.play()
                             if self.K > 1:
                                 self.K -= 1
                         
