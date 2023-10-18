@@ -101,6 +101,9 @@ class Jeu:
         self.M = TAILLE_GRILLE * TAILLE_GRILLE
         self.caseTrouvees = 0
         
+        self.sonEncaisser = pygame.mixer.Sound('ressources/sounds/encaisser.wav')
+        self.sonTirer = pygame.mixer.Sound('ressources/sounds/tirer.wav')
+        
         self.perdu = False
         self.aEncaisser = False
         self.aCommencer = False
@@ -129,6 +132,7 @@ class Jeu:
             self.casesRevelees.append((x, y))
 
         if self.grille.grille[x][y] == 0:
+            self.sonTirer.play()
             couleur = VERT
             self.grille.casesRestantes -= 1
         else:
@@ -270,6 +274,7 @@ class Jeu:
                                 self.K -= 1
                         
                     if self.boutonEncaisser.estClique(event.pos):
+                        self.sonEncaisser.play()
                         self.encaisser()
 
             if self.perdu or self.aEncaisser or not self.aCommencer:
