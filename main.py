@@ -89,6 +89,7 @@ class Jeu:
     def __init__(self) -> None:
         self.K = 5
         pygame.init()
+        pygame.mixer.init()
         self.screen = pygame.display.set_mode((TAILLE_FENETRE + 200, TAILLE_FENETRE))
         pygame.display.set_caption("Démineur")
         self.grille = Grille(TAILLE_GRILLE, self.K)
