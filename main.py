@@ -99,6 +99,7 @@ class Jeu:
         self.multiplicateur = 1
         self.M = TAILLE_GRILLE * TAILLE_GRILLE
         self.caseTrouvees = 0
+        self.grille.casesRestantes = self.M
         
         self.sonEncaisser = pygame.mixer.Sound('ressources/sounds/encaisser.wav')
         self.sonTirer = pygame.mixer.Sound('ressources/sounds/tirer.wav')
@@ -271,6 +272,7 @@ class Jeu:
                                     self.player.mise = self.player.tune
                                 else:
                                     self.player.mise = 10
+                                    
                         elif self.boutonDoublerMise.estClique(event.pos):
                             self.sonTirer.play()
                             if self.player.tune >= self.player.mise*2:
@@ -286,7 +288,7 @@ class Jeu:
                             if self.K > 1:
                                 self.K -= 1
                         
-                    if self.boutonEncaisser.estClique(event.pos):
+                    if self.boutonEncaisser.estClique(event.pos) and self.aEncaisser == False:
                         self.sonEncaisser.play()
                         self.encaisser()
 
