@@ -129,9 +129,7 @@ class Jeu:
         
         self.gain = self.player.mise
         
-        self.casesRevelees = []
-        self.calculerProchainMultiplicateur()
-        self.afficherProchainMultiplicateur()        
+        self.casesRevelees = []      
 
     def reveler(self, screen, x, y):
         if (x, y) in self.casesRevelees:
