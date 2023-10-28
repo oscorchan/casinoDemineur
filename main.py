@@ -127,6 +127,8 @@ class Jeu:
         self.boutonAugmenterNombreDeMines = Bouton(35, 70, 25, 25, "+", BLANC, ROUGE, VERT)
         self.boutonDiminuerNombreDeMines = Bouton(85, 70, 25, 25, "-", BLANC, ROUGE, VERT)
         
+        self.boutonRecave = Bouton(40, TAILLE_FENETRE - 100, 150, 50, "Recave", BLANC, ROUGE, VERT)
+        
         self.gain = self.player.mise
         
         self.casesRevelees = []      
@@ -271,6 +273,9 @@ class Jeu:
                                     self.player.mise = self.player.tune
                                 else:
                                     self.player.mise = 10
+                        elif self.boutonRecave.estClique(event.pos):
+                            self.player.tune += 500
+                            self.sonEncaisser.play()
                                     
                         elif self.boutonDoublerMise.estClique(event.pos):
                             self.sonTirer.play()
@@ -303,6 +308,7 @@ class Jeu:
                 self.afficherMise()
                 self.afficherArgent()
                 self.afficherNombreDeMines()
+                self.boutonRecave.dessiner(self.screen)
                 if self.perdu:
                     perdreText = self.font.render("Vous avez perdu !", True, BLANC)
                     perdreRect = perdreText.get_rect()
